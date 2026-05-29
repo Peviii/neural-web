@@ -112,3 +112,62 @@ def backpropagation(self, x, y):
 
 net = Network([784, 30, 30, 10], activations=['relu', 'relu', 'sigmoid'])
 print(net)
+
+import math
+
+def softmax(logits):
+    """Compute softmax for 1D or 2D input."""
+    # Handle 2D list (matrix)
+    if isinstance(logits, list) and logits and isinstance(logits[0], list):
+        return [softmax_1d(row) for row in logits]
+    # Handle 1D list
+    else:
+        return softmax_1d(logits)
+
+def softmax_1d(logits):
+    """Softmax for a 1D list."""
+    # Find max for numerical stability
+    max_z = max(logits)
+    # Compute exp(logits - max_z) and sum
+    exp_vals = [math.exp(z - max_z) for z in logits]
+    sum_exp = sum(exp_vals)
+    # Compute probabilities
+    return [e / sum_exp for e in exp_vals]
+
+def softmax_backward(d_out, logits):
+    """Backward pass of softmax for 1D or 2D input."""
+    # Handle 2D case
+    if logits and isinstance(logits[0], list):
+        return [softmax_backward_1d(d_out[i], logits[i]) for i in range(len(logits))]
+    # Handle 1D case
+    else:
+        return softmax_backward_1d(d_out, logits)
+
+def softmax_backward_1d(d_out, logits):
+    """Backward pass for 1D softmax."""
+    probs = softmax_1d(logits)
+    d_input = [0.0] * len(logits)   # equivalent to vec(size, 0.0)
+    n = len(probs)
+    for i in range(n):
+        for j in range(n):
+            deriv = probs[i] * ((1.0 if i == j else 0.0) - probs[j])
+            d_input[j] += d_out[i] * deriv
+    return d_input
+
+def argmax(arr):
+    """Return index of maximum value in a 1D list."""
+    best_i = 0
+    best_v = arr[0]
+    for i in range(1, len(arr)):
+        if arr[i] > best_v:
+            best_v = arr[i]
+            best_i = i
+    return best_i
+
+def vec(size, init=0.0):
+    """Create a 1D list of given size filled with init."""
+    return [init] * size
+
+def mat(rows, cols, init=0.0):
+    """Create a 2D list (rows x cols) filled with init."""
+    return [vec(cols, init) for _ in range(rows)]
